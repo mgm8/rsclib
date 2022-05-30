@@ -25,7 +25,7 @@
  * 
  * \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
  * 
- * \version 0.0.0
+ * \version 0.0.1
  * 
  * \date 2022/03/06
  * 
@@ -35,7 +35,7 @@
 
 #include <string.h>
 
-#include "rsc.h"
+#include <rsc/rsc.h>
 
 #define	MIN(a, b)   ((a) < (b) ? (a) : (b))
 

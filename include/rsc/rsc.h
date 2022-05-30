@@ -25,7 +25,7 @@
  * 
  * \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
  * 
- * \version 0.0.0
+ * \version 0.0.1
  * 
  * \date 2022/03/06
  * 
@@ -37,6 +37,8 @@
 #define RSC_H_
 
 #include <stdint.h>
+
+#define RSC_VERSION         "v0.0.1"
 
 /**
  * \brief Reed-Solomon codec control block.
@@ -56,7 +58,7 @@ typedef struct
 } reed_solomon_t;
 
 /**
- * \brief Reed Solomon codec initialization.
+ * \brief Reed-Solomon codec initialization.
  *
  * \param[in] symsize is the symbol size in bits.
  *
@@ -70,37 +72,37 @@ typedef struct
  *
  * \param[in] pad is the padding bytes at front of shortened block.
  *
- * \param[in,out] rs is the reed_solomon_t structure to initialize.
+ * \param[in,out] rs is the reed_solomon_t structure to initialize with the given configuration parameters.
  *
  * \return The status/error code.
  */
 int rsc_init(int symsize, int gfpoly, int fcr, int prim, int nroots, int pad, reed_solomon_t *rs);
 
 /**
- * \brief .
+ * \brief Computes the parity data of a given byte sequence.
  *
- * \param[in] rs .
+ * \param[in] rs is the structure with the Reed-Solomon configuration.
  *
- * \param[in] data .
+ * \param[in] data is the array of bytes to compute the parity data.
  *
- * \param[in] parity .
+ * \param[in] parity is the computed parity data.
  *
  * \return None.
  */
 void rsc_encode(reed_solomon_t rs, uint8_t *data, uint8_t *parity);
 
 /**
- * \brief .
+ * \brief Decodes a Reed-Solomon sequence (data + parity).
  *
- * \param[in] rs .
+ * \param[in] rs is the structure with the Reed-Solomon configuration.
  *
- * \param[in] data .
+ * \param[in] data is the byte sequence to decode (data + parity).
  *
- * \param[in] eras_pos .
+ * \param[in] eras_pos is a pointer to store the position of the detected errors.
  *
  * \param[in] no_eras .
  *
- * \return .
+ * \return The status/error code.
  */
 int rsc_decode(reed_solomon_t rs, uint8_t *data, int *eras_pos, int no_eras);
 
