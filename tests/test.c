@@ -25,7 +25,7 @@
  * 
  * \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
  * 
- * \version 0.0.1
+ * \version 0.0.2
  * 
  * \date 2022/05/30
  * 
@@ -34,63 +34,51 @@
  * \{
  */
 
-#include <stdio.h>
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <setjmp.h>
+#include <float.h>
+#include <cmocka.h>
 
 #include <rsc/rsc.h>
 
-int main()
+static void rsc_init_test(void **state)
 {
     reed_solomon_t rs16 = {0};
 
-    if (rsc_init(8, 0x187, 112, 11, 16, 0, &rs16) != 0)
-    {
-        printf("Error initializing RS codec!\n\r");
+    assert_return_code(rsc_init(8, 0x187, 112, 11, 16, 0, &rs16), 0);
 
-        return -1;
-    }
+    assert_int_equal(rs16.mm,       8);
+    assert_int_equal(rs16.nn,       0xFF);
+//    assert_int_equal(rs16.alpha_to, "1, 2, 4, 8, 10, 20, 40, 80, 87, 89, 95, ad, dd, 3d, 7a, f4");
+//    assert_int_equal(rs16.index_of, "ff, 0, 1, 63, 2, c6, 64, 6a, 3, cd, c7, bc, 65, 7e, 6b, 2a");
+//    assert_int_equal(rs16.genpoly,  "7a, f0, 12, b4, c7, b5, dd, 31, ea, e1, 3f, c7, 8a, 28, 36, c5");
+//    assert_int_equal(rs16.nroots,   0x10);
+//    assert_int_equal(rs16.fcr,      70);
+//    assert_int_equal(rs16.prim,     0x0B);
+//    assert_int_equal(rs16.iprim,    74);
+//    assert_int_equal(rs16.pad,      0);
+}
 
-    uint8_t i = 0;
+static void rsc_encode_test(void **state)
+{
+//    rsc_encode(rs16, data, par);
+}
 
-    printf("MM: %x\n\r", rs16.mm);
-    printf("NN: %x\n\r", rs16.nn);
-    for(i = 0; i < 16; i++)
-    {
-        printf("%x, ", rs16.alpha_to[i]);
-    }
-    printf("\n\r");
-    for(i = 0; i < 16; i++)
-    {
-        printf("%x, ", rs16.index_of[i]);
-    }
-    printf("\n\r");
-    for(i = 0; i < 16; i++)
-    {
-        printf("%x, ", rs16.genpoly[i]);
-    }
-    printf("\n\r");
-    printf("nroots: %x\n\r", rs16.nroots);
-    printf("FCR: %x\n\r", rs16.fcr);
-    printf("prim: %x\n\r", rs16.prim);
-    printf("iprim: %x\n\r", rs16.iprim);
-    printf("pad: %x\n\r", rs16.pad);
+static void rsc_decode_test(void **state)
+{
+}
 
-    uint8_t data[32] = {0};
-    uint8_t par[16] = {0};
+int main()
+{
+    const struct CMUnitTest rsc_tests[] = {
+        cmocka_unit_test(rsc_init_test),
+        cmocka_unit_test(rsc_encode_test),
+        cmocka_unit_test(rsc_decode_test),
+    };
 
-    for(i = 0; i < 32; i++)
-    {
-        data[i] = i;
-    }
-
-    rsc_encode(rs16, data, par);
-
-    for(i = 0; i < 16; i++)
-    {
-        printf("%x, ", par[i]);
-    }
-    printf("\n\r");
-
-    return 0;
+    return cmocka_run_group_tests(rsc_tests, NULL, NULL);
 }
 
 /**< \} End of test group */
