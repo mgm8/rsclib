@@ -49,25 +49,55 @@ static void rsc_init_test(void **state)
 
     assert_return_code(rsc_init(8, 0x187, 112, 11, 16, 0, &rs16), 0);
 
+    /* Expected results */
+    uint8_t alpha_to[50] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x87, 0x89, 0x95, 0xAD, 0xDD, 0x3D, 0x7A, 0xF4};
+    uint8_t index_of[50] = {0xFF, 0x00, 0x01, 0x63, 0x02, 0xC6, 0x64, 0x6A, 0x03, 0xCD, 0xC7, 0xBC, 0x65, 0x7E, 0x6B, 0x2A};
+    uint8_t genpoly[50] = {0x7A, 0xF0, 0x12, 0xB4, 0xC7, 0xB5, 0xDD, 0x31, 0xEA, 0xE1, 0x3F, 0xC7, 0x8A, 0x28, 0x36, 0xC5};
+
     assert_int_equal(rs16.mm,       8);
     assert_int_equal(rs16.nn,       0xFF);
-//    assert_int_equal(rs16.alpha_to, "1, 2, 4, 8, 10, 20, 40, 80, 87, 89, 95, ad, dd, 3d, 7a, f4");
-//    assert_int_equal(rs16.index_of, "ff, 0, 1, 63, 2, c6, 64, 6a, 3, cd, c7, bc, 65, 7e, 6b, 2a");
-//    assert_int_equal(rs16.genpoly,  "7a, f0, 12, b4, c7, b5, dd, 31, ea, e1, 3f, c7, 8a, 28, 36, c5");
-//    assert_int_equal(rs16.nroots,   0x10);
-//    assert_int_equal(rs16.fcr,      70);
-//    assert_int_equal(rs16.prim,     0x0B);
-//    assert_int_equal(rs16.iprim,    74);
-//    assert_int_equal(rs16.pad,      0);
+    assert_memory_equal(rs16.alpha_to, alpha_to, 16);
+    assert_memory_equal(rs16.index_of, index_of, 16);
+    assert_memory_equal(rs16.genpoly, genpoly, 16);
+    assert_int_equal(rs16.nroots,   0x10);
+    assert_int_equal(rs16.fcr,      70);
+    assert_int_equal(rs16.prim,     0x0B);
+    assert_int_equal(rs16.iprim,    74);
+    assert_int_equal(rs16.pad,      0);
 }
 
 static void rsc_encode_test(void **state)
 {
-//    rsc_encode(rs16, data, par);
+    /* Expected result */
+    uint8_t par_ref[32] = {0x59, 0x93, 0xFB, 0xBC, 0xF5, 0xE6, 0xC2, 0x90, 0xD0, 0x6E, 0x77, 0xCB, 0x83, 0xAA, 0xC8, 0xEE};
+
+    reed_solomon_t rs16 = {0};
+
+    rsc_init(8, 0x187, 112, 11, 16, 0, &rs16);
+
+    uint8_t data[220] = {0};
+    uint8_t par[32] = {0};
+
+    rsc_encode(rs16, data, par);
+
+    assert_memory_equal(par_ref, par, 16);
 }
 
 static void rsc_decode_test(void **state)
 {
+    reed_solomon_t rs16 = {0};
+
+    rsc_init(8, 0x187, 112, 11, 16, 0, &rs16);
+
+    uint8_t data[220] = {0};
+    uint8_t par[32] = {0};
+    uint8_t pkt[300] = {0};
+
+//    rsc_encode(rs16, data, par);
+//
+//    uint8_t eras_pos[32] = {0};
+//
+//    assert_return_code(rsc_decode(rs16, pkt, eras_pos, 0), 0);
 }
 
 int main()
