@@ -60,9 +60,9 @@ static void rsc_init_test(void **state)
     assert_memory_equal(rs16.index_of, index_of, 16);
     assert_memory_equal(rs16.genpoly, genpoly, 16);
     assert_int_equal(rs16.nroots,   0x10);
-    assert_int_equal(rs16.fcr,      70);
+    assert_int_equal(rs16.fcr,      112);
     assert_int_equal(rs16.prim,     0x0B);
-    assert_int_equal(rs16.iprim,    74);
+    assert_int_equal(rs16.iprim,    116);
     assert_int_equal(rs16.pad,      0);
 }
 
