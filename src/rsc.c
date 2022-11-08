@@ -25,7 +25,7 @@
  * 
  * \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
  * 
- * \version 0.0.1
+ * \version 0.0.3
  * 
  * \date 2022/03/06
  * 
@@ -52,97 +52,114 @@ int modnn(reed_solomon_t rs, int x);
 
 int rsc_init(int symsize, int gfpoly, int fcr, int prim, int nroots, int pad, reed_solomon_t *rs)
 {
+    int err = 0;
+
     int i, j, sr, root, iprim;
 
     /* Check parameter ranges */
-    if ((symsize < 0) || (symsize > (8 * sizeof(uint8_t))))
+    if ((symsize >= 0) && (symsize <= (8 * sizeof(uint8_t))))
     {
-        return -1;
-    }
-
-    if ((fcr < 0) || (fcr >= (1 << symsize)))
-    {
-        return -1;
-    }
-
-    if ((prim <= 0) || (prim >= (1 << symsize)))
-    {
-        return -1;
-    }
-
-    if ((nroots < 0) || (nroots >= (1 << symsize)))
-    {
-        return -1;  /* Can't have more roots than symbol values! */
-    }
-
-    if ((pad < 0) || (pad >= ((1 << symsize) - 1 - nroots)))
-    {
-        return -1;  /* Too much padding */
-    }
-
-    rs->mm = symsize;
-    rs->nn = (1 << symsize) - 1;
-    rs->pad = pad;
-
-    /* Generate Galois field lookup tables */
-    rs->index_of[0] = rs->nn;   /* log(zero) = -inf */
-    rs->alpha_to[rs->nn] = 0;   /* alpha**-inf = 0 */
-    sr = 1;
-    for(i = 0; i < rs->nn; i++)
-    {
-        rs->index_of[sr] = i;
-        rs->alpha_to[i] = sr;
-        sr <<= 1;
-        if (sr & (1 << symsize))
+        if ((fcr >= 0) && (fcr < (1 << symsize)))
         {
-            sr ^= gfpoly;
-        }
-        sr &= rs->nn;
-    }
-    if (sr != 1)
-    {
-        /* field generator polynomial is not primitive! */
-        memset(rs, 0, sizeof(reed_solomon_t));
-        return -1;
-    }
-
-    rs->fcr = fcr;
-    rs->prim = prim;
-    rs->nroots = nroots;
-
-    /* Find prim-th root of 1, used in decoding */
-    for(iprim = 1; (iprim % prim) != 0; iprim += rs->nn)
-    {
-    }
-    rs->iprim = iprim / prim;
-
-    rs->genpoly[0] = 1;
-    for(i = 0, root = fcr * prim; i < nroots; i++, root += prim)
-    {
-        rs->genpoly[i + 1] = 1;
-
-        /* Multiply rs->genpoly[] by  @**(root + x) */
-        for(j = i; j > 0; j--)
-        {
-            if (rs->genpoly[j] != 0)
+            if ((prim > 0) && (prim < (1 << symsize)))
             {
-                rs->genpoly[j] = rs->genpoly[j - 1] ^ rs->alpha_to[modnn(*rs, rs->index_of[rs->genpoly[j]] + root)];
+                if ((nroots >= 0) && (nroots < (1 << symsize)))
+                {
+                    if ((pad >= 0) && (pad < ((1 << symsize) - 1 - nroots)))
+                    {
+                        rs->mm = symsize;
+                        rs->nn = (1 << symsize) - 1;
+                        rs->pad = pad;
+
+                        /* Generate Galois field lookup tables */
+                        rs->index_of[0] = rs->nn;   /* log(zero) = -inf */
+                        rs->alpha_to[rs->nn] = 0;   /* alpha**-inf = 0 */
+                        sr = 1;
+                        for(i = 0; i < rs->nn; i++)
+                        {
+                            rs->index_of[sr] = i;
+                            rs->alpha_to[i] = sr;
+                            sr <<= 1;
+                            if (sr & (1 << symsize))
+                            {
+                                sr ^= gfpoly;
+                            }
+                            sr &= rs->nn;
+                        }
+                        if (sr == 1)
+                        {
+                            rs->fcr = fcr;
+                            rs->prim = prim;
+                            rs->nroots = nroots;
+
+                            /* Find prim-th root of 1, used in decoding */
+                            for(iprim = 1; (iprim % prim) != 0; iprim += rs->nn)
+                            {
+                            }
+                            rs->iprim = iprim / prim;
+
+                            rs->genpoly[0] = 1;
+                            for(i = 0, root = fcr * prim; i < nroots; i++, root += prim)
+                            {
+                                rs->genpoly[i + 1] = 1;
+
+                                /* Multiply rs->genpoly[] by  @**(root + x) */
+                                for(j = i; j > 0; j--)
+                                {
+                                    if (rs->genpoly[j] != 0)
+                                    {
+                                        rs->genpoly[j] = rs->genpoly[j - 1] ^ rs->alpha_to[modnn(*rs, rs->index_of[rs->genpoly[j]] + root)];
+                                    }
+                                    else
+                                    {
+                                        rs->genpoly[j] = rs->genpoly[j - 1];
+                                    }
+                                }
+                                /* rs->genpoly[0] can never be zero */
+                                rs->genpoly[0] = rs->alpha_to[modnn(*rs, rs->index_of[rs->genpoly[0]] + root)];
+                            }
+                            /* convert rs->genpoly[] to index form for quicker encoding */
+                            for(i = 0; i <= nroots; i++)
+                            {
+                                rs->genpoly[i] = rs->index_of[rs->genpoly[i]];
+                            }
+
+                            err = 0;
+                        }
+                        else
+                        {
+                            /* field generator polynomial is not primitive! */
+                            memset(rs, 0, sizeof(reed_solomon_t));
+
+                            err = -1;
+                        }
+                    }
+                    else
+                    {
+                        err = 0;    /* Too much padding */
+                    }
+                }
+                else
+                {
+                    err = -1;   /* Can't have more roots than symbol values! */
+                }
             }
             else
             {
-                rs->genpoly[j] = rs->genpoly[j - 1];
+                err = -1;
             }
         }
-        /* rs->genpoly[0] can never be zero */
-        rs->genpoly[0] = rs->alpha_to[modnn(*rs, rs->index_of[rs->genpoly[0]] + root)];
+        else
+        {
+            err = -1;
+        }
     }
-    /* convert rs->genpoly[] to index form for quicker encoding */
-    for(i = 0; i <= nroots; i++)
+    else
     {
-        rs->genpoly[i] = rs->index_of[rs->genpoly[i]];
+        err = -1;
     }
 
-    return 0;
+    return err;
 }
 
 void rsc_encode(reed_solomon_t rs, uint8_t *data, uint8_t *parity)

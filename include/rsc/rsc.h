@@ -25,7 +25,7 @@
  * 
  * \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
  * 
- * \version 0.0.2
+ * \version 0.0.3
  * 
  * \date 2022/03/06
  * 
@@ -38,7 +38,7 @@
 
 #include <stdint.h>
 
-#define RSC_VERSION         "v0.0.2"
+#define RSC_VERSION         "v0.0.3"
 
 /**
  * \brief Reed-Solomon codec control block.
