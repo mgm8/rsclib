@@ -25,7 +25,7 @@
  * 
  * \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
  * 
- * \version 0.0.4
+ * \version 0.0.5
  * 
  * \date 2022/03/06
  * 
@@ -38,7 +38,7 @@
 
 #include <stdint.h>
 
-#define RSC_VERSION         "v0.0.4"
+#define RSC_VERSION         "v0.0.5"
 
 /**
  * \brief Reed-Solomon codec control block.
@@ -87,9 +87,11 @@ int rsc_init(int symsize, int gfpoly, int fcr, int prim, int nroots, int pad, re
  *
  * \param[in] parity is the computed parity data.
  *
+ * \param[in] parity_len is the length, in bytes, of the computed parity data.
+ *
  * \return None.
  */
-void rsc_encode(reed_solomon_t *rs, uint8_t *data, uint8_t *parity);
+void rsc_encode(reed_solomon_t *rs, uint8_t *data, uint8_t *parity, uint8_t *parity_len);
 
 /**
  * \brief Decodes a Reed-Solomon sequence (data + parity).

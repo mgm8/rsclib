@@ -25,7 +25,7 @@
  * 
  * \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
  * 
- * \version 0.0.4
+ * \version 0.0.5
  * 
  * \date 2022/03/06
  * 
@@ -162,38 +162,37 @@ int rsc_init(int symsize, int gfpoly, int fcr, int prim, int nroots, int pad, re
     return err;
 }
 
-void rsc_encode(reed_solomon_t *rs, uint8_t *data, uint8_t *parity)
+void rsc_encode(reed_solomon_t *rs, uint8_t *data, uint8_t *parity, uint8_t *parity_len)
 {
-    int i, j;
-    uint8_t feedback;
+    int i = 0;
+    int j = 0;
+    int feedback = 0;
 
-    memset(parity, 0, rs->nroots * sizeof(uint8_t));
+    memset(parity, 0, rs->nroots);
 
-    for(i = 0; i < rs->nn - rs->nroots - rs->pad; i++)
+    for(i = 0; i < (rs->nn - rs->nroots - rs->pad); i++)
     {
         feedback = rs->index_of[data[i] ^ parity[0]];
         if (feedback != rs->nn)  /* feedback term is non-zero */
         {
-        #ifdef UNNORMALIZED
-            /* This line is unnecessary when rs.genpoly[rs.nroots] is unity, as it must always be for the polynomials constructed by init_rs() */
-            feedback = modnn(rs, rs->nn - rs->genpoly[rs->nroots] + feedback);
-        #endif
-            for(j = 1; j < rs->nroots; j++)
+            for(j = 0; j < rs->nroots; j++)
             {
 	            parity[j] ^= rs->alpha_to[modnn(rs, feedback + rs->genpoly[rs->nroots - j])];
             }
         }
         /* Shift */
-        memmove(&parity[0], &parity[1], sizeof(uint8_t) * (rs->nroots - 1));
+        memmove(&parity[0], &parity[1], rs->nroots - 1);
         if (feedback != rs->nn)
         {
             parity[rs->nroots - 1] = rs->alpha_to[modnn(rs, feedback + rs->genpoly[0])];
         }
         else
         {
-            parity[rs->nroots - 1] = 0;
+            parity[rs->nroots - 1] = 0U;
         }
     }
+
+    *parity_len = rs->nroots;
 }
 
 int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *eras_pos, int no_eras)
