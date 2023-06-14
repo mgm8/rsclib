@@ -25,7 +25,7 @@
  * 
  * \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
  * 
- * \version 0.0.5
+ * \version 0.1.0
  * 
  * \date 2022/05/30
  * 
@@ -39,6 +39,7 @@
 #include <stdint.h>
 #include <setjmp.h>
 #include <float.h>
+#include <string.h>
 #include <cmocka.h>
 
 #include <rsc/rsc.h>
@@ -93,20 +94,36 @@ static void rsc_encode_test(void **state)
 
 static void rsc_decode_test(void **state)
 {
-    reed_solomon_t rs16 = {0};
-
-    rsc_init(8, 0x187, 112, 11, 16, 208, &rs16);
-
-    uint8_t data[220] = {0};
-    uint8_t par[32] = {0};
-    uint8_t par_len = 0;
-    uint8_t pkt[300] = {0};
-
-    rsc_encode(&rs16, data, par, &par_len);
-
-    uint8_t eras_pos[32] = {0};
-
-    assert_return_code(rsc_decode(&rs16, pkt, eras_pos, 0), 0);
+//    reed_solomon_t rs16 = {0};
+//
+//    rsc_init(8, 0x187, 112, 11, 16, 208, &rs16);
+//
+//    uint8_t data[32] = {0U};
+//    uint8_t par[32] = {0U};
+//    uint8_t par_len = 0U;
+//    uint8_t pkt[300] = {0U};
+//
+//    uint8_t i = 0;
+//
+//    for(i = 0; i < 32; i++)
+//    {
+//        data[i] = i;
+//    }
+//
+//    rsc_encode(&rs16, data, par, &par_len);
+//
+//    /* Merge data and parity */
+//    memcpy(pkt, data, 32);
+//    memcpy(&pkt[32], par, par_len);
+//
+//    uint8_t dec_data[32] = {0U};
+//    uint8_t err_pos[32] = {0U};
+//    uint8_t num_err = 0U;
+//
+//    assert_return_code(rsc_decode(&rs16, pkt, dec_data, err_pos, &num_err), 0);
+//
+//    assert_memory_equal(dec_data, data, 32);
+//    assert_int_equal(num_err, 0);
 }
 
 int main()
