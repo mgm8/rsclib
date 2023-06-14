@@ -25,7 +25,7 @@
  * 
  * \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
  * 
- * \version 0.0.4
+ * \version 0.1.0
  * 
  * \date 2022/03/06
  * 
@@ -38,7 +38,7 @@
 
 #include <stdint.h>
 
-#define RSC_VERSION         "v0.0.4"
+#define RSC_VERSION         "v0.1.0"
 
 /**
  * \brief Reed-Solomon codec control block.
@@ -87,24 +87,28 @@ int rsc_init(int symsize, int gfpoly, int fcr, int prim, int nroots, int pad, re
  *
  * \param[in] parity is the computed parity data.
  *
+ * \param[in] parity_len is the length, in bytes, of the computed parity data.
+ *
  * \return None.
  */
-void rsc_encode(reed_solomon_t *rs, uint8_t *data, uint8_t *parity);
+void rsc_encode(reed_solomon_t *rs, uint8_t *data, uint8_t *parity, uint8_t *parity_len);
 
 /**
  * \brief Decodes a Reed-Solomon sequence (data + parity).
  *
  * \param[in] rs is the structure with the Reed-Solomon configuration.
  *
- * \param[in] data is the byte sequence to decode (data + parity).
+ * \param[in] pkt is the byte sequence to decode (data + parity).
  *
- * \param[in] eras_pos is a pointer to store the position of the detected errors.
+ * \param[in,out] data is the decoded data from pkt.
  *
- * \param[in] no_eras .
+ * \param[in,out] err_pos is a pointer to store the position of the detected errors.
+ *
+ * \param[in,out] num_err is the number of detected errors.
  *
  * \return The status/error code.
  */
-int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *eras_pos, int no_eras);
+int rsc_decode(reed_solomon_t *rs, uint8_t *pkt, uint8_t *data, uint8_t *err_pos, uint8_t *num_err);
 
 #endif /* RSC_H_ */
 
