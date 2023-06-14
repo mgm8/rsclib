@@ -33,6 +33,22 @@ sudo make install
 
 int main()
 {
+    reed_solomon_t rs16 = {0};
+
+    rsc_init(8, 0x187, 112, 11, 16, 208, &rs16);
+
+    uint8_t data[32] = {0};
+    uint8_t par[32] = {0};
+    uint8_t par_len = 0;
+
+    uint8_t i = 0;
+    for(i = 0; i < 32; i++)
+    {
+        data[i] = i;
+    }
+
+    rsc_encode(&rs16, data, par, &par_len);
+
     return 0;
 }
 ```
