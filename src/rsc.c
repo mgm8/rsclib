@@ -194,20 +194,26 @@ void rsc_encode(reed_solomon_t *rs, uint8_t *data, uint8_t *parity, uint8_t *par
     *parity_len = rs->nroots;
 }
 
-int rsc_decode(reed_solomon_t *rs, uint8_t *pkt, uint8_t *data, uint8_t *err_pos, uint8_t *num_err)
+int rsc_decode(reed_solomon_t *rs, uint8_t *pkt, uint8_t *data, int *err_pos, int *num_err)
 {
     int err = -1;
 
     int deg_lambda          = 0;
     int el                  = 0;
     int deg_omega           = 0;
-    int u                   = 0;
-    int q                   = 0;
-    int tmp                 = 0;
-    int num1                = 0;
-    int num2                = 0;
-    int den                 = 0;
-    int discr_r             = 0;
+
+    int r                   = 0;
+    int i                   = 0;
+    int j                   = 0;
+    int k                   = 0;
+
+    uint8_t u               = 0;
+    uint8_t q               = 0;
+    uint8_t tmp             = 0;
+    uint8_t num1            = 0;
+    uint8_t num2            = 0;
+    uint8_t den             = 0;
+    uint8_t discr_r         = 0;
     uint8_t lambda[32 + 1]  = {0U};
     uint8_t s[32]           = {0U};
     uint8_t b[32 + 1]       = {0U};
@@ -216,19 +222,14 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *pkt, uint8_t *data, uint8_t *err_pos
     uint8_t root[32]        = {0U};
     uint8_t reg[32 + 1]     = {0U};
     uint8_t loc[32]         = {0U};
+
     int syn_error           = 0;
     int count               = 0;
 
-    int r = 0;
-    int i = 0;
-    int j = 0;
-    int k = 0;
-
-    /* Form the syndromes; i.e., evaluate data(x) at roots of g(x) */
-    
+    /* Form the syndromes; i.e., evaluate pkt(x) at roots of g(x) */
     for (i=0;i < rs->nroots;i++)
     {
-        s[i] = data[0];
+        s[i] = pkt[0];
     }
 
     for(j = 1; j < (rs->nn - rs->pad); j++)
@@ -237,27 +238,29 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *pkt, uint8_t *data, uint8_t *err_pos
         {
             if (s[i] == 0)
             {
-                s[i] = data[j];
+                s[i] = pkt[j];
             }
             else
             {
-                s[i] = data[j] ^ rs->alpha_to[modnn(rs, rs->index_of[s[i]] + (rs->fcr + i) * rs->prim)];
+                s[i] = pkt[j] ^ rs->alpha_to[modnn(rs, ((int)(rs->index_of[s[i]]) + (rs->fcr + i) * rs->prim))];
             }
         }
     }
 
     /* Convert syndromes to index form, checking for nonzero condition */
     syn_error = 0;
+
     for(i = 0; i < rs->nroots; i++)
     {
         syn_error |= s[i];
         s[i] = rs->index_of[s[i]];
+
     }
 
-    if (!syn_error)
+    if (syn_error == 0)
     {
-        /* if syndrome is zero, data[] is a codeword and there are no errors
-         to correct. So return data[] unmodified */
+        /* if syndrome is zero, pkt[] is a codeword and there are no errors
+         to correct. So return pkt[] unmodified */
 
         count = 0;
     }
@@ -444,10 +447,10 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *pkt, uint8_t *data, uint8_t *err_pos
                         den ^= rs->alpha_to[modnn(rs, lambda[i + 1] + i * root[j])];
                     }
                 }
-                /* Apply error to data */
+                /* Apply error to pkt */
                 if (num1 != 0 && loc[j] >= rs->pad)
                 {
-                    data[loc[j] - rs->pad] ^= rs->alpha_to[modnn(rs, rs->index_of[num1] + rs->index_of[num2] + rs->nn - rs->index_of[den])];
+                    pkt[loc[j] - rs->pad] ^= rs->alpha_to[modnn(rs, rs->index_of[num1] + rs->index_of[num2] + rs->nn - rs->index_of[den])];
                 }
             }
         }
@@ -460,6 +463,9 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *pkt, uint8_t *data, uint8_t *err_pos
             err_pos[i] = loc[i];
         }
     }
+
+    /* Copy pkt to data */
+    memcpy(data, pkt, 32);
 
     err = count;
 

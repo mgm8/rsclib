@@ -117,8 +117,8 @@ static void rsc_decode_test(void **state)
     memcpy(&pkt[32], par, par_len);
 
     uint8_t dec_data[32] = {0U};
-    uint8_t err_pos[32] = {0U};
-    uint8_t num_err = 0U;
+    int err_pos[32] = {0U};
+    int num_err = 0U;
 
     assert_return_code(rsc_decode(&rs16, pkt, dec_data, err_pos, &num_err), 0);
 
