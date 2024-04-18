@@ -35,7 +35,6 @@
 
 #include <string.h>
 #include <rsc/rsc.h>
-#include <stdio.h>
 
 #define	MIN(a, b)   ((a) < (b) ? (a) : (b))
 
@@ -407,7 +406,7 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, int *num_err)
         {
             /* Compute err+eras evaluator poly omega(x) = s(x)*lambda(x) (modulo x**rs.nroots). in index form. Also find deg(omega) */
             deg_omega = deg_lambda - 1;
-            for(i = 0; i < deg_omega; i++)
+            for(i = 0; i <= deg_omega; i++)
             {
                 tmp = 0;
                 for(j = i; j >= 0; j--)
@@ -424,7 +423,7 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, int *num_err)
             for(j = (count - 1); j >= 0; j--)
             {
                 num1 = 0;
-                for(i = deg_omega; j >= 0; j--)
+                for(i = deg_omega; i >= 0; i--)
                 {
                     if (omega[i] != rs->nn)
                     {
@@ -460,6 +459,8 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, int *num_err)
     }
 
     err = count;
+    *num_err = count;
+
 
     return err;
 }
