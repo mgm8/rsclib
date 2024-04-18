@@ -41,8 +41,11 @@
 #include <float.h>
 #include <string.h>
 #include <cmocka.h>
+#include <stdio.h>
 
 #include <rsc/rsc.h>
+
+/* Polynom = 1 + x^3 + x^5 + x^7 + x^8 */
 
 static void rsc_init_test(void **state)
 {
@@ -102,10 +105,12 @@ static void rsc_decode_test(void **state)
     uint8_t par[32] = {0U};
     uint8_t par_len = 0U;
     uint8_t pkt[300] = {0U};
+    int err_pos[32] = {0U};
+    int num_err = 0U;
 
     uint8_t i = 0;
 
-    for(i = 0; i < 32; i++)
+    for(i=0;i<31;i++)
     {
         data[i] = i;
     }
@@ -113,16 +118,20 @@ static void rsc_decode_test(void **state)
     rsc_encode(&rs16, data, par, &par_len);
 
     /* Merge data and parity */
-    memcpy(pkt, data, 32);
-    memcpy(&pkt[32], par, par_len);
+    memcpy(pkt, data, 31);
+    memcpy(&pkt[31], par, par_len);
 
-    uint8_t dec_data[32] = {0U};
-    int err_pos[32] = {0U};
-    int num_err = 0U;
+    pkt[2] = 54;
 
-    assert_return_code(rsc_decode(&rs16, pkt, dec_data, err_pos, &num_err), 0);
+    assert_return_code(rsc_decode(&rs16, pkt, err_pos, &num_err), 1);
 
-    assert_memory_equal(dec_data, data, 32);
+    for(i=0;i<31;i++)
+    {
+        printf("%d,", pkt[i]);
+    }
+    
+    printf("\n");
+    assert_memory_equal(pkt, data, 31);
     assert_int_equal(num_err, 0);
 }
 

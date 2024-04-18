@@ -35,6 +35,7 @@
 
 #include <string.h>
 #include <rsc/rsc.h>
+#include <stdio.h>
 
 #define	MIN(a, b)   ((a) < (b) ? (a) : (b))
 
@@ -194,9 +195,9 @@ void rsc_encode(reed_solomon_t *rs, uint8_t *data, uint8_t *parity, uint8_t *par
     *parity_len = rs->nroots;
 }
 
-int rsc_decode(reed_solomon_t *rs, uint8_t *pkt, uint8_t *data, int *err_pos, int *num_err)
+int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, int *num_err)
 {
-    int err = -1;
+    int err                 = -1;
 
     int deg_lambda          = 0;
     int el                  = 0;
@@ -226,10 +227,10 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *pkt, uint8_t *data, int *err_pos, in
     int syn_error           = 0;
     int count               = 0;
 
-    /* Form the syndromes; i.e., evaluate pkt(x) at roots of g(x) */
+    /* Form the syndromes; i.e., evaluate data(x) at roots of g(x) */
     for (i=0;i < rs->nroots;i++)
     {
-        s[i] = pkt[0];
+        s[i] = data[0];
     }
 
     for(j = 1; j < (rs->nn - rs->pad); j++)
@@ -238,17 +239,14 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *pkt, uint8_t *data, int *err_pos, in
         {
             if (s[i] == 0)
             {
-                s[i] = pkt[j];
+                s[i] = data[j];
             }
             else
             {
-                s[i] = pkt[j] ^ rs->alpha_to[modnn(rs, ((int)(rs->index_of[s[i]]) + (rs->fcr + i) * rs->prim))];
+                s[i] = data[j] ^ rs->alpha_to[modnn(rs, (rs->index_of[s[i]]) + (rs->fcr + i) * rs->prim)];
             }
         }
     }
-
-    /* Convert syndromes to index form, checking for nonzero condition */
-    syn_error = 0;
 
     for(i = 0; i < rs->nroots; i++)
     {
@@ -257,11 +255,11 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *pkt, uint8_t *data, int *err_pos, in
 
     }
 
+
     if (syn_error == 0)
     {
-        /* if syndrome is zero, pkt[] is a codeword and there are no errors
-         to correct. So return pkt[] unmodified */
-
+        /* if syndrome is zero, data[] is a codeword and there are no errors
+         to correct. So return data[] unmodified */
         count = 0;
     }
     else
@@ -403,10 +401,7 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *pkt, uint8_t *data, int *err_pos, in
         if (deg_lambda != count)
         {
             /* deg(lambda) unequal to number of roots => uncorrectable error detected */
-            //printf("%d\n", deg_lambda);
-            //printf("%d\n", count);
             count = -1;
-            //printf("deg_lambda != count\n");
         }
         else
         {
@@ -447,10 +442,10 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *pkt, uint8_t *data, int *err_pos, in
                         den ^= rs->alpha_to[modnn(rs, lambda[i + 1] + i * root[j])];
                     }
                 }
-                /* Apply error to pkt */
+                /* Apply error to data */
                 if (num1 != 0 && loc[j] >= rs->pad)
                 {
-                    pkt[loc[j] - rs->pad] ^= rs->alpha_to[modnn(rs, rs->index_of[num1] + rs->index_of[num2] + rs->nn - rs->index_of[den])];
+                    data[loc[j] - rs->pad] ^= rs->alpha_to[modnn(rs, rs->index_of[num1] + rs->index_of[num2] + rs->nn - rs->index_of[den])];
                 }
             }
         }
@@ -463,9 +458,6 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *pkt, uint8_t *data, int *err_pos, in
             err_pos[i] = loc[i];
         }
     }
-
-    /* Copy pkt to data */
-    memcpy(data, pkt, 32);
 
     err = count;
 
