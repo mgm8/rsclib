@@ -37,15 +37,22 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
 #include <setjmp.h>
 #include <float.h>
 #include <string.h>
 #include <cmocka.h>
-#include <stdio.h>
+#include <time.h>
+
 
 #include <rsc/rsc.h>
 
 /* Polynom = 1 + x^3 + x^5 + x^7 + x^8 */
+
+uint8_t random_value(uint8_t min, uint8_t max);
 
 static void rsc_init_test(void **state)
 {
@@ -97,46 +104,83 @@ static void rsc_encode_test(void **state)
 
 static void rsc_decode_test(void **state)
 {
-    reed_solomon_t rs16 = {0};
+    reed_solomon_t rs = {0};
+    int rs_padding, rs_msg_size, rs_nroots;
 
-    rsc_init(8, 0x187, 112, 11, 16, 208, &rs16);
-
-    uint8_t data[32] = {0U};
-    uint8_t par[32] = {0U};
+    uint8_t data[255] = {0U};
+    uint8_t par[255] = {0U};
     uint8_t par_len = 0U;
     uint8_t pkt[300] = {0U};
-    int err_pos[32] = {0U};
+    int err_pos[255] = {0U};
+    int expected_err_pos[255] = {0U};
     int num_err = 0U;
+    int s_err = 0U;
+    int s_exp_err = 0U;
+    uint8_t rand_number_of_errors;
+    bool rand_error_pos_arr[255];
+    uint8_t rand_error_position;
+    uint8_t rand_error_value;
 
-    uint8_t i = 0;
+    rs_nroots = (int) (random_value(1,2)) * 16;
 
-    for(i=0;i<31;i++)
+    rs_msg_size = random_value(1,255 - (uint8_t)rs_nroots);
+    rs_padding = 255 - rs_msg_size - (uint8_t)rs_nroots;
+
+    rsc_init(8, 0x187, 112, 11, rs_nroots, rs_padding, &rs);
+
+    uint8_t i,j = 0;
+
+    for(i=0;i<rs_msg_size;i++)
     {
         data[i] = i;
     }
 
-    rsc_encode(&rs16, data, par, &par_len);
+    rsc_encode(&rs, data, par, &par_len);
 
     /* Merge data and parity */
-    memcpy(pkt, data, 31);
-    memcpy(&pkt[31], par, par_len);
+    memcpy(pkt, data, rs_msg_size);
+    memcpy(&pkt[rs_msg_size], par, par_len);
 
-    pkt[2] = 54;
+    /* Adding random errors */
+    rand_number_of_errors = random_value(0, par_len/2);
 
-    assert_return_code(rsc_decode(&rs16, pkt, err_pos, &num_err), 1);
-
-    for(i=0;i<31;i++)
+    for (i=0;i<rand_number_of_errors;i++)
     {
-        printf("%d,", pkt[i]);
-    }
-    
-    printf("\n");
-    assert_memory_equal(pkt, data, 31);
-    assert_int_equal(num_err, 0);
-}
+        rand_error_value = random_value(0, 255);
+        rand_error_position = random_value(0, par_len + rs_msg_size);
 
+        while (rand_error_pos_arr[rand_error_position])
+        {
+            rand_error_position = random_value(0, par_len + rs_msg_size);
+        }
+
+        rand_error_pos_arr[rand_error_position] = true;
+
+        while (pkt[rand_error_position] == rand_error_value)
+        {
+            rand_error_value = random_value(0, 255);
+        }
+        expected_err_pos[i] = rand_error_position + rs_padding;
+        pkt[rand_error_position] = rand_error_value;
+    }
+
+    assert_return_code(rsc_decode(&rs, pkt, err_pos, &num_err), 0);
+
+    for (i=0;i<rand_number_of_errors;i++)
+    {
+        s_exp_err += err_pos[i];
+        s_err += expected_err_pos[i];
+    }
+
+    assert_memory_equal(pkt, data, rs_msg_size);
+    assert_int_equal(num_err, rand_number_of_errors);
+    assert_int_equal(s_exp_err, s_err);
+
+}
 int main()
 {
+    srand(time(NULL));
+    uint32_t i=0;
     const struct CMUnitTest rsc_tests[] = {
         cmocka_unit_test(rsc_init_test),
         cmocka_unit_test(rsc_encode_test),
@@ -144,6 +188,11 @@ int main()
     };
 
     return cmocka_run_group_tests(rsc_tests, NULL, NULL);
+}
+
+uint8_t random_value(uint8_t min, uint8_t max)
+{
+    return (rand() % (max - min + 1)) + min;
 }
 
 /**< \} End of test group */
