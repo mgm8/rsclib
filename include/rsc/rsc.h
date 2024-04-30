@@ -24,7 +24,7 @@
  * \brief Reed-Solomon C library definition.
  * 
  * \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
- * 
+ * \author Miguel Boing <miguelboing13@gmail.com>
  * \version 0.1.0
  * 
  * \date 2022/03/06
@@ -38,7 +38,7 @@
 
 #include <stdint.h>
 
-#define RSC_VERSION         "v0.1.0"
+#define RSC_VERSION         "v1.0.0"
 
 /**
  * \brief Reed-Solomon codec control block.

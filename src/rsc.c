@@ -24,15 +24,17 @@
  * \brief Reed-Solomon C library implementation.
  * 
  * \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
+ * \author Miguel Boing <miguelboing13@gmail.com>
  * 
- * \version 0.1.0
+ * \version 1.0.0
  * 
- * \date 2022/03/06
+ * \date 2024/04/29
  * 
  * \addtogroup rsclib
  * \{
  */
 
+#include <stdio.h>
 #include <string.h>
 #include <rsc/rsc.h>
 
@@ -260,6 +262,7 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, int *num_err)
         /* if syndrome is zero, data[] is a codeword and there are no errors
          to correct. So return data[] unmodified */
         count = 0;
+        err = 0;
     }
     else
     {
@@ -298,17 +301,17 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, int *num_err)
             discr_r = 0;
             for(i = 0; i < r; i++)
             {
-                if ((lambda[i] != 0) && (s[r - i - 1]) != rs->nn)
+                if ((lambda[i] != 0) && ((int)(s[r - i - 1]) != rs->nn))
                 {
                     discr_r ^= rs->alpha_to[modnn(rs, rs->index_of[lambda[i]] + s[r - i - 1])];
                 }
             }
             discr_r = rs->index_of[discr_r];    /* Index form */
-            if (discr_r == rs->nn)
+            if ((int)discr_r == rs->nn)
             {
                 /* 2 lines below: B(x) <-- x*B(x) */
                 memmove(&b[1],b,rs->nroots*sizeof(b[0]));
-                b[0] = rs->nn;
+                b[0] = (uint8_t) rs->nn;
             }
             else
             {
@@ -316,7 +319,7 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, int *num_err)
                 t[0] = lambda[0];
                 for(i = 0; i < rs->nroots; i++)
                 {
-                    if (b[i] != rs->nn)
+                    if (((int) b[i]) != rs->nn)
                     {
                         t[i + 1] = lambda[i + 1] ^ rs->alpha_to[modnn(rs, discr_r + b[i])];
                     }
@@ -333,7 +336,7 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, int *num_err)
                     {
                         if (lambda[i] == 0)
                         {
-                            b[i] = rs->nn;
+                            b[i] = (uint8_t)rs->nn;
                         }
                         else
                         {
@@ -344,15 +347,17 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, int *num_err)
                 else
                 {
                     /* 2 lines below: B(x) <-- x*B(x) */
-                      memmove(&b[1],b,rs->nroots*sizeof(b[0]));
-                      b[0] = rs->nroots;
+                      memmove(&b[1],b,(rs->nroots)*sizeof(b[0]));
+                      b[0] = 255;
                 }
-                  memcpy(lambda,t,(rs->nroots+1)*sizeof(t[0]));
+
+                memcpy(lambda,t,(rs->nroots)*sizeof(t[0]));
             }
         }
 
         /* Convert lambda to index form and compute deg(lambda(x)) */
         deg_lambda = 0;
+
         for(i = 0; i < (rs->nroots + 1); i++)
         {
             lambda[i] = rs->index_of[lambda[i]];
@@ -390,8 +395,7 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, int *num_err)
             root[count] = i;
             loc[count] = k;
             /* If we've already found max possible roots, abort the search to save time */
-            count++;
-            if (count == deg_lambda)
+            if (++count == deg_lambda)
             {
                 break;
             }
@@ -401,6 +405,7 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, int *num_err)
         {
             /* deg(lambda) unequal to number of roots => uncorrectable error detected */
             count = -1;
+            err = -1;
         }
         else
         {
@@ -447,6 +452,7 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, int *num_err)
                     data[loc[j] - rs->pad] ^= rs->alpha_to[modnn(rs, rs->index_of[num1] + rs->index_of[num2] + rs->nn - rs->index_of[den])];
                 }
             }
+        err = 0;
         }
     }
 
@@ -458,9 +464,7 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, int *num_err)
         }
     }
 
-    err = count;
     *num_err = count;
-
 
     return err;
 }
