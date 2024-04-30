@@ -24,10 +24,10 @@
  * \brief Reed-Solomon C library unit test.
  * 
  * \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
+ * \author Miguel Boing <miguelboing13@gmail.com>
+ * \version 1.0.0
  * 
- * \version 0.1.0
- * 
- * \date 2022/05/30
+ * \date 2024/04/30
  * 
  * \defgroup test Test
  * \ingroup rsclib
@@ -147,11 +147,11 @@ static void rsc_decode_test(void **state)
     for (i=0;i<rand_number_of_errors;i++)
     {
         rand_error_value = random_value(0, 255);
-        rand_error_position = random_value(0, par_len + rs_msg_size);
+        rand_error_position = random_value(0, par_len + rs_msg_size - 1);
 
         while (rand_error_pos_arr[rand_error_position])
         {
-            rand_error_position = random_value(0, par_len + rs_msg_size);
+            rand_error_position = random_value(0, par_len + rs_msg_size - 1);
         }
 
         rand_error_pos_arr[rand_error_position] = true;
@@ -160,6 +160,7 @@ static void rsc_decode_test(void **state)
         {
             rand_error_value = random_value(0, 255);
         }
+
         expected_err_pos[i] = rand_error_position + rs_padding;
         pkt[rand_error_position] = rand_error_value;
     }
@@ -180,7 +181,7 @@ static void rsc_decode_test(void **state)
 int main()
 {
     srand(time(NULL));
-    uint32_t i=0;
+
     const struct CMUnitTest rsc_tests[] = {
         cmocka_unit_test(rsc_init_test),
         cmocka_unit_test(rsc_encode_test),
