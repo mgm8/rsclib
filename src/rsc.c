@@ -1,4 +1,4 @@
-/*
+/* 
  * rsc.c
  * 
  * Copyright The RSCLib Contributors.
@@ -16,7 +16,7 @@
  * GNU Lesser General Public License for more details.
  * 
  * You should have received a copy of the GNU Lesser General Public License
- * along with RSCLib. If not, see <http://www.gnu.org/licenses/>.
+ * along with RSCLib. If not, see <http:/\/www.gnu.org/licenses/>.
  * 
  */
 
@@ -55,21 +55,25 @@ int rsc_init(int symsize, int gfpoly, int fcr, int prim, int nroots, int pad, re
 {
     int err = 0;
 
-    int i, j, sr, root, iprim;
+    int i;
+    int j;
+    int sr;
+    int root;
+    int iprim;
 
     /* Check parameter ranges */
-    if ((symsize >= 0) && (symsize <= (8 * sizeof(uint8_t))))
+    if ((symsize >= 0) && (symsize <= (int)(8U * sizeof(uint8_t))))
     {
-        if ((fcr >= 0) && (fcr < (1 << symsize)))
+        if ((fcr >= 0) && (fcr < (int)(1U << (uint8_t)symsize)))
         {
-            if ((prim > 0) && (prim < (1 << symsize)))
+            if ((prim > 0) && (prim < (int)(1U << (uint8_t)symsize)))
             {
-                if ((nroots >= 0) && (nroots < (1 << symsize)))
+                if ((nroots >= 0) && (nroots < (int)(1U << (uint8_t)symsize)))
                 {
-                    if ((pad >= 0) && (pad < ((1 << symsize) - 1 - nroots)))
+                    if ((pad >= 0) && (pad < (int)((1U << (uint8_t)symsize) - 1U - (uint8_t)nroots)))
                     {
                         rs->mm = symsize;
-                        rs->nn = (1 << symsize) - 1;
+                        rs->nn = (int)(1U << (uint8_t) symsize) - 1;
                         rs->pad = pad;
 
                         /* Generate Galois field lookup tables */
@@ -81,7 +85,7 @@ int rsc_init(int symsize, int gfpoly, int fcr, int prim, int nroots, int pad, re
                             rs->index_of[sr] = i;
                             rs->alpha_to[i] = sr;
                             sr <<= 1;
-                            if (sr & (1 << symsize))
+                            if (sr & (int) (1U << (uint8_t) symsize))
                             {
                                 sr ^= gfpoly;
                             }
@@ -216,14 +220,14 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, int *num_err)
     uint8_t num2            = 0;
     uint8_t den             = 0;
     uint8_t discr_r         = 0;
-    uint8_t lambda[32 + 1]  = {0U};
-    uint8_t s[32]           = {0U};
-    uint8_t b[32 + 1]       = {0U};
-    uint8_t t[32 + 1]       = {0U};
-    uint8_t omega[32 + 1]   = {0U};
-    uint8_t root[32]        = {0U};
-    uint8_t reg[32 + 1]     = {0U};
-    uint8_t loc[32]         = {0U};
+    uint8_t lambda[33]      = {0};
+    uint8_t s[32]           = {0};
+    uint8_t b[33]           = {0};
+    uint8_t t[33]           = {0};
+    uint8_t omega[33]       = {0};
+    uint8_t root[32]        = {0};
+    uint8_t reg[33]         = {0};
+    uint8_t loc[32]         = {0};
 
     int syn_error           = 0;
     int count               = 0;
@@ -238,7 +242,7 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, int *num_err)
     {
         for(i = 0; i < rs->nroots; i++)
         {
-            if (s[i] == 0)
+            if (s[i] == 0U)
             {
                 s[i] = data[j];
             }
@@ -301,7 +305,7 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, int *num_err)
             discr_r = 0;
             for(i = 0; i < r; i++)
             {
-                if ((lambda[i] != 0) && ((int)(s[r - i - 1]) != rs->nn))
+                if ((lambda[i] != 0U) && ((int)(s[r - i - 1]) != rs->nn))
                 {
                     discr_r ^= rs->alpha_to[modnn(rs, rs->index_of[lambda[i]] + s[r - i - 1])];
                 }
@@ -328,13 +332,13 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, int *num_err)
                         t[i + 1] = lambda[i + 1];
                     }
                 }
-                if (2 * el <= r + *num_err - 1)
+                if ((2 * el) <= (r + *num_err - 1))
                 {
                     el = r + *num_err - el;
                     /* 2 lines below: B(x) <-- inv(discr_r) * lambda(x) */
                     for(i = 0; i <= rs->nroots; i++)
                     {
-                        if (lambda[i] == 0)
+                        if (lambda[i] == 0U)
                         {
                             b[i] = (uint8_t)rs->nn;
                         }
@@ -382,12 +386,12 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, int *num_err)
             {
                 if (reg[j] != rs->nn)
                 {
-                    reg[j] = modnn(rs, reg[j] + j);
+                    reg[j] = modnn(rs, reg[j] + (uint8_t)j);
                     q ^= rs->alpha_to[reg[j]];
                 }
             }
 
-            if (q != 0)
+            if (q != 0U)
             {
                 continue;   /* Not a root */
             }   
@@ -432,7 +436,7 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, int *num_err)
                 {
                     if (omega[i] != rs->nn)
                     {
-                        num1 ^= rs->alpha_to[modnn(rs, omega[i] + i * root[j])];
+                        num1 ^= rs->alpha_to[modnn(rs, (int)omega[i] + (i * (int)root[j]))];
                     }
                 }
                 num2 = rs->alpha_to[modnn(rs, root[j] * (rs->fcr - 1) + rs->nn)];
@@ -443,11 +447,11 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, int *num_err)
                 {
                     if (lambda[i + 1] != rs->nn)
                     {
-                        den ^= rs->alpha_to[modnn(rs, lambda[i + 1] + i * root[j])];
+                        den ^= rs->alpha_to[modnn(rs, (int)lambda[i + 1] + (i * (int)root[j]))];
                     }
                 }
                 /* Apply error to data */
-                if (num1 != 0 && loc[j] >= rs->pad)
+                if ((num1 != 0U) && (loc[j] >= rs->pad))
                 {
                     data[loc[j] - rs->pad] ^= rs->alpha_to[modnn(rs, rs->index_of[num1] + rs->index_of[num2] + rs->nn - rs->index_of[den])];
                 }
