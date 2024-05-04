@@ -34,7 +34,6 @@
  * \{
  */
 
-#include <stdio.h>
 #include <string.h>
 #include <rsc/rsc.h>
 
@@ -49,7 +48,7 @@
  *
  * \return The computed modulo value of the given number.
  */
-int modnn(reed_solomon_t *rs, int x);
+int modnn(reed_solomon_t *rs, int num);
 
 int rsc_init(int symsize, int gfpoly, int fcr, int prim, int nroots, int pad, reed_solomon_t *rs)
 {
@@ -62,15 +61,15 @@ int rsc_init(int symsize, int gfpoly, int fcr, int prim, int nroots, int pad, re
     int iprim;
 
     /* Check parameter ranges */
-    if ((symsize >= 0) && (symsize <= (int)(8U * sizeof(uint8_t))))
+    if ((symsize >= 0) && ((uint8_t) symsize <= (8U * sizeof(uint8_t))))
     {
-        if ((fcr >= 0) && (fcr < (int)(1U << (uint8_t)symsize)))
+        if ((fcr >= 0) && ((uint8_t) fcr < (1U << (uint8_t)symsize)))
         {
-            if ((prim > 0) && (prim < (int)(1U << (uint8_t)symsize)))
+            if ((prim > 0) && ((uint8_t) prim < (1U << (uint8_t)symsize)))
             {
-                if ((nroots >= 0) && (nroots < (int)(1U << (uint8_t)symsize)))
+                if ((nroots >= 0) && ((uint8_t) nroots < (1U << (uint8_t)symsize)))
                 {
-                    if ((pad >= 0) && (pad < (int)((1U << (uint8_t)symsize) - 1U - (uint8_t)nroots)))
+                    if ((pad >= 0) && ((uint8_t) pad < ((1U << (uint8_t)symsize) - 1U - (uint8_t)nroots)))
                     {
                         rs->mm = symsize;
                         rs->nn = (int)(1U << (uint8_t) symsize) - 1;
@@ -104,8 +103,15 @@ int rsc_init(int symsize, int gfpoly, int fcr, int prim, int nroots, int pad, re
                             rs->iprim = iprim / prim;
 
                             rs->genpoly[0] = 1;
-                            for(i = 0, root = fcr * prim; i < nroots; i++, root += prim)
+
+                            root = fcr * prim;
+                            for(i = 0; i < nroots; i++)
                             {
+                                if (i != 0)
+                                {
+                                    root += prim;
+                                }
+
                                 rs->genpoly[i + 1] = 1;
 
                                 /* Multiply rs->genpoly[] by  @**(root + x) */
@@ -134,7 +140,7 @@ int rsc_init(int symsize, int gfpoly, int fcr, int prim, int nroots, int pad, re
                         else
                         {
                             /* field generator polynomial is not primitive! */
-                            memset(rs, 0, sizeof(reed_solomon_t));
+                            (void)memset(rs, 0, sizeof(reed_solomon_t));
 
                             err = -1;
                         }
@@ -173,7 +179,7 @@ void rsc_encode(reed_solomon_t *rs, uint8_t *data, uint8_t *parity, uint8_t *par
     int j = 0;
     int feedback = 0;
 
-    memset(parity, 0, rs->nroots);
+    (void)memset(parity, 0, rs->nroots);
 
     for(i = 0; i < (rs->nn - rs->nroots - rs->pad); i++)
     {
@@ -186,7 +192,7 @@ void rsc_encode(reed_solomon_t *rs, uint8_t *data, uint8_t *parity, uint8_t *par
             }
         }
         /* Shift */
-        memmove(&parity[0], &parity[1], rs->nroots - 1);
+        (void)memmove(&parity[0], &parity[1], rs->nroots - 1);
         if (feedback != rs->nn)
         {
             parity[rs->nroots - 1] = rs->alpha_to[modnn(rs, feedback + rs->genpoly[0])];
@@ -270,7 +276,7 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, int *num_err)
     }
     else
     {
-        memset(&lambda[1],0,rs->nroots*sizeof(lambda[0]));
+        (void)memset(&lambda[1],0,rs->nroots*sizeof(lambda[0]));
         lambda[0] = 1;
 
         if (*num_err > 0)
@@ -314,7 +320,7 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, int *num_err)
             if ((int)discr_r == rs->nn)
             {
                 /* 2 lines below: B(x) <-- x*B(x) */
-                memmove(&b[1],b,rs->nroots*sizeof(b[0]));
+                (void)memmove(&b[1],b,rs->nroots*sizeof(b[0]));
                 b[0] = (uint8_t) rs->nn;
             }
             else
@@ -351,11 +357,11 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, int *num_err)
                 else
                 {
                     /* 2 lines below: B(x) <-- x*B(x) */
-                      memmove(&b[1],b,(rs->nroots)*sizeof(b[0]));
+                      (void)memmove(&b[1],b,(rs->nroots)*sizeof(b[0]));
                       b[0] = 255;
                 }
 
-                memcpy(lambda,t,(rs->nroots)*sizeof(t[0]));
+                (void)memcpy(lambda,t,(rs->nroots)*sizeof(t[0]));
             }
         }
 
@@ -371,7 +377,7 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, int *num_err)
             }
         }
         /* Find roots of the error+erasure locator polynomial by Chien search */
-        memcpy(&reg[1],&lambda[1],rs->nroots*sizeof(reg[0]));
+        (void)memcpy(&reg[1],&lambda[1],rs->nroots*sizeof(reg[0]));
         count = 0;  /* Number of roots of lambda(x) */
         k = rs->iprim - 1;
         for(i = 1; i <= (rs->nn); i++)
@@ -473,8 +479,11 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, int *num_err)
     return err;
 }
 
-int modnn(reed_solomon_t *rs, int x)
+int modnn(reed_solomon_t *rs, int num)
 {
+    int x;
+    x = num;
+
     while(x >= rs->nn)
     {
         x -= rs->nn;
