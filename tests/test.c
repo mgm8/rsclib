@@ -48,10 +48,7 @@
 #include <cmocka.h>
 #include <time.h>
 
-
 #include <rsc/rsc.h>
-
-/* Polynom = 1 + x^3 + x^5 + x^7 + x^8 */
 
 uint8_t random_value(uint8_t min, uint8_t max);
 
