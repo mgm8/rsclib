@@ -109,7 +109,7 @@ void rsc_encode(reed_solomon_t *rs, uint8_t *data, uint8_t *parity, uint8_t *par
  *
  * \return The status/error code.
  */
-int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, uint32_t *num_err);
+int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, int *num_err);
 
 #endif /* RSC_H_ */
 
