@@ -35,8 +35,7 @@
  */
 
 #include <string.h>
-#include <stdbool.h>
-#include "rsc.h"
+#include "rsc/rsc.h"
 
 /**
  * \brief Computes the modulo of a given number.
@@ -476,7 +475,10 @@ int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, int *num_err)
         }
     }
 
-    *num_err = count;
+    if (num_err != NULL)
+    {
+        *num_err = count;
+    }
 
     return err;
 }

@@ -5,7 +5,7 @@ if(" ${CMAKE_SOURCE_DIR}" STREQUAL " ${CMAKE_BINARY_DIR}")
 	message(FATAL_ERROR "FATAL: In-source builds are not allowed. You should create a separate directory for build files.")
 endif()
 
-project(rsc LANGUAGES C VERSION 0.1.0 HOMEPAGE_URL https://github.com/mgm8/rsclib)
+project(rsc LANGUAGES C VERSION 1.0.1 HOMEPAGE_URL https://github.com/mgm8/rsclib)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 

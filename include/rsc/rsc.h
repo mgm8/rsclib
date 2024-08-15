@@ -16,7 +16,7 @@
  * GNU Lesser General Public License for more details.
  * 
  * You should have received a copy of the GNU Lesser General Public License
- * along with RSCLib. If not, see <http://www.gnu.org/licenses/>.
+ * along with RSCLib. If not, see <http:/\/www.gnu.org/licenses/>.
  * 
  */
 
@@ -39,7 +39,7 @@
 
 #include <stdint.h>
 
-#define RSC_VERSION         "v1.0.0"
+#define RSC_VERSION         "v1.0.1"
 
 /**
  * \brief Reed-Solomon codec control block.
@@ -109,7 +109,7 @@ void rsc_encode(reed_solomon_t *rs, uint8_t *data, uint8_t *parity, uint8_t *par
  *
  * \return The status/error code.
  */
-int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, uint32_t *num_err);
+int rsc_decode(reed_solomon_t *rs, uint8_t *data, int *err_pos, int *num_err);
 
 #endif /* RSC_H_ */
 
