@@ -39,7 +39,7 @@
 
 #include <stdint.h>
 
-#define RSC_VERSION         "v1.0.0"
+#define RSC_VERSION         "v1.0.1"
 
 /**
  * \brief Reed-Solomon codec control block.
